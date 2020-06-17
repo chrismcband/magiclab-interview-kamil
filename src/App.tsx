@@ -4,7 +4,9 @@ import axios from "axios";
 import { reset } from "./helpers";
 
 function App() {
+  // const [scrollTop, setScrollTop]: any = useState(0);
   const [data, setData]: Array<any> = useState([]);
+  const [running, toggleRunning]: any = useState(true);
   const [initialError, setInitialError]: any = useState(null);
   const [fetchError, setFetchError]: any = useState(null);
 
@@ -34,24 +36,26 @@ function App() {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      axios
-        .get(
-          `https://magiclab-twitter-interview.herokuapp.com/kamil-albrycht/api?count=50&id=${getNewestDataId()}&direction=1`
-        )
-        .then(res => {
-          // Dirty trick to stop when reach to the end
-          if (res.data[0].id === 10001) {
-            return;
-          }
-          setData([...res.data, ...data]);
-        })
-        .catch(err => {
-          // Fetch error happened repeat effect
-          setFetchError(Date.now());
-        });
+      if (running) {
+        axios
+          .get(
+            `https://magiclab-twitter-interview.herokuapp.com/kamil-albrycht/api?count=50&id=${getNewestDataId()}&direction=1`
+          )
+          .then(res => {
+            // Dirty trick to stop when reach to the end
+            if (res.data[0].id === 10001) {
+              return;
+            }
+            setData([...res.data, ...data]);
+          })
+          .catch(err => {
+            // Fetch error happened repeat effect
+            setFetchError(Date.now());
+          });
+      }
     }, 2000);
     return () => clearTimeout(timer);
-  }, [data, fetchError, getNewestDataId]);
+  }, [data, fetchError, getNewestDataId, running]);
 
   const loadMore = () => {
     axios
@@ -84,7 +88,19 @@ function App() {
       >
         RESET
       </button>
-      <TweetWrap loadMore={loadMore} tweets={data} />
+      <button
+        onClick={() => {
+          toggleRunning(!running);
+        }}
+      >
+        Toggle is {running ? "true" : "false"}
+      </button>
+      <TweetWrap
+        toggleRunning={toggleRunning}
+        // setScrollTop={setScrollTop}
+        loadMore={loadMore}
+        tweets={data}
+      />
     </div>
   );
 }
